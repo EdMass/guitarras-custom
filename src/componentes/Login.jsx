@@ -1,10 +1,22 @@
 import React from "react";
+import fireApp, { db } from "../firebase/firebase";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { collection, addDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+
+const auth = getAuth(fireApp);
 
 const Login = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState(null);
   const [isRegistro, setIsRegistro] = React.useState(true);
+
+  const navigate = useNavigate();
 
   const recibirDatos = (e) => {
     e.preventDefault();
@@ -24,7 +36,55 @@ const Login = () => {
       return;
     }
     setError(null);
+
+    if (isRegistro) {
+      registrar();
+    } else {
+      login();
+    }
   };
+
+  const login = React.useCallback(async () => {
+    try {
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      console.log(res);
+      setEmail("");
+      setPassword("");
+      setError(null);
+      navigate("/");
+    } catch (error) {
+      console.log(error);
+      if (error.message === "Firebase: Error (auth/user-not-found).") {
+        setError("El email es incorrecto o no está registrado");
+      }
+      if (error.message === "Firebase: Error (auth/wrong-password).") {
+        setError("El password es incorrecto o el email no está registrado");
+      }
+    }
+  }, [email, password, navigate]);
+
+  const registrar = React.useCallback(async () => {
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      await addDoc(collection(db, "usuarios"), {
+        email: res.user.email,
+        uid: res.user.uid,
+      });
+      setEmail("");
+      setPassword("");
+      setError(null);
+      navigate("/");
+      //console.log(res);
+    } catch (error) {
+      console.log(error);
+      if (error.message === "Firebase: Error (auth/invalid-email).") {
+        setError("El email no es válido");
+      }
+      if (error.message === "Firebase: Error (auth/email-already-in-use).") {
+        setError("El email ya está registrado");
+      }
+    }
+  }, [email, password, navigate]);
 
   return (
     <>
@@ -53,11 +113,14 @@ const Login = () => {
               />
               <div className="pagination gap-2 d-md-flex justify-content-center">
                 <button className="btn btn-dark btn-lg btn-block" type="submit">
-                {isRegistro ? "Registrarse" : "Acceder"}
+                  {isRegistro ? "Registrarse" : "Acceder"}
                 </button>
-                <button className="btn btn-primary btn-lg" onClick={() => setIsRegistro(!isRegistro)}
-                type="button">
-                   {isRegistro ? "¿Estas registrado?" : "¿No tienes cuenta?"}
+                <button
+                  className="btn btn-primary btn-lg"
+                  onClick={() => setIsRegistro(!isRegistro)}
+                  type="button"
+                >
+                  {isRegistro ? "¿Estas registrado?" : "¿No tienes cuenta?"}
                 </button>
               </div>
             </form>
