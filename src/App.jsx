@@ -9,7 +9,6 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 const auth = getAuth(fireApp);
 
 function App() {
-
   const [firebaseUser, setFirebaseUser] = React.useState(false);
 
   React.useEffect(() => {
@@ -28,7 +27,7 @@ function App() {
         <Navbar firebaseUser={firebaseUser} />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login />} />:
           <Route path="*" element={<h1>404 NotFoundPage</h1>} />
         </Routes>
       </div>

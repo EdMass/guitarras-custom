@@ -14,9 +14,18 @@ const Login = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState(null);
-  const [isRegistro, setIsRegistro] = React.useState(true);
+  const [isRegistro, setIsRegistro] = React.useState(false);
+  const [user, setUser] = React.useState(null);
 
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!auth.currentUser) {
+      setUser(auth.currentUser);
+    } else {
+      navigate("/");
+    }
+  }, [navigate]);
 
   const recibirDatos = (e) => {
     e.preventDefault();
@@ -42,6 +51,8 @@ const Login = () => {
     } else {
       login();
     }
+
+    console.log(user)
   };
 
   const login = React.useCallback(async () => {
