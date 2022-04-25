@@ -15,14 +15,14 @@ const Home = () => {
     } else {
       navigate("/login");
     }
-  }, [navigate]);
+  }, [navigate, setUser]);
 
   return (
     <>
       <h1>Home</h1>
       {
           user && (
-              <h3>{user.email}</h3>
+              <h3>{user.displayName}</h3>
           )
       }
     </>

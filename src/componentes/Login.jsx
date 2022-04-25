@@ -4,6 +4,7 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
 } from "firebase/auth";
 import { collection, addDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
@@ -13,9 +14,11 @@ const auth = getAuth(fireApp);
 const Login = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [confirm, setConfirm] = React.useState("");
   const [error, setError] = React.useState(null);
   const [isRegistro, setIsRegistro] = React.useState(false);
   const [user, setUser] = React.useState(null);
+  const [username, setUsername] = React.useState("");
 
   const navigate = useNavigate();
 
@@ -44,6 +47,22 @@ const Login = () => {
       setError("El password debe ser mayor a 7 caracteres");
       return;
     }
+
+    if (password !== confirm) {
+      setError("El password no coincide, rectifique por favor");
+      return;
+    }
+
+    if (username.length < 3) {
+      setError("El Username debe tener al menos 3 caracteres");
+      return;
+    }
+
+    if (username.length > 30) {
+      setError("El Username debe tener menos de 30 caracteres");
+      return;
+    }
+
     setError(null);
 
     if (isRegistro) {
@@ -52,7 +71,7 @@ const Login = () => {
       login();
     }
 
-    console.log(user)
+    console.log(user);
   };
 
   const login = React.useCallback(async () => {
@@ -77,15 +96,18 @@ const Login = () => {
   const registrar = React.useCallback(async () => {
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
+      console.log(res);
       await addDoc(collection(db, "usuarios"), {
         email: res.user.email,
         uid: res.user.uid,
+      });
+      updateProfile(auth.currentUser, {
+        displayName: username,
       });
       setEmail("");
       setPassword("");
       setError(null);
       navigate("/");
-      //console.log(res);
     } catch (error) {
       console.log(error);
       if (error.message === "Firebase: Error (auth/invalid-email).") {
@@ -95,7 +117,7 @@ const Login = () => {
         setError("El email ya está registrado");
       }
     }
-  }, [email, password, navigate]);
+  }, [email, password, username, navigate]);
 
   return (
     <>
@@ -110,6 +132,7 @@ const Login = () => {
               {error && <div className="alert alert-danger">{error}</div>}
               <input
                 type="email"
+                id="email"
                 className="form-control mb-2"
                 placeholder="Ingrese un email"
                 onChange={(e) => setEmail(e.target.value)}
@@ -117,11 +140,33 @@ const Login = () => {
               />
               <input
                 type="password"
+                id="pass"
                 className="form-control mb-2"
                 placeholder="Ingrese un password"
                 onChange={(e) => setPassword(e.target.value)}
                 value={password}
               />
+              {isRegistro && (
+                <input
+                  type="password"
+                  id="confirm"
+                  className="form-control mb-2"
+                  placeholder="Confirme su password"
+                  onChange={(e) => setConfirm(e.target.value)}
+                  value={confirm}
+                />
+              )}
+              {isRegistro && (
+                <input
+                  type="text"
+                  id="username"
+                  className="form-control mb-2"
+                  placeholder="Escriba su Username"
+                  onChange={(e) => setUsername(e.target.value)}
+                  value={username}
+                  required
+                />
+              )}
               <div className="pagination gap-2 d-md-flex justify-content-center">
                 <button className="btn btn-dark btn-lg btn-block" type="submit">
                   {isRegistro ? "Registrarse" : "Acceder"}
